@@ -12,7 +12,7 @@ from twilio.rest import Client
 
 # change district id, u can get district ids
 # by running following commands
-# get state id - curl -X GET "https://cdn-api.co-vin.in/api/v2/admin/location/states" -H "accept: application/json" -H "Accept-Language: hi_IN"
+# get state id - curl -X GET "https://cdn-api.co-vin.in/api/v2/admin/location/states" -H "accept: application/json" -H "Accept-Language: hi_IN" -H 'User-Agent: mukagr'
 # example dtate id is 31 for tamil nadu
 # get district ids by -
 # curl -X GET "https://cdn-api.co-vin.in/api/v2/admin/location/districts/31" -H "accept: application/json" -H "Accept-Language: hi_IN"
@@ -41,29 +41,31 @@ def send_whatsapp_message(msg):
 
 
 def get_available_slots(district, date, age):
+    headers_dict = {"User-Agent": "test-app"}
     response = requests.get(
-        "https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/findByDistrict?district_id={district}&date={date}".format(
-            district=district, date=date))
+        "https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict?district_id={district}&date={date}".format(
+            district=district, date=date),headers=headers_dict)
     # try:
-    sessions = json.loads(response.text)
+    centres = json.loads(response.text)['centers']
     # except:
     #     return []
-    available_slots = []
-    for session in sessions['sessions']:
-        print("checking slot: " + str(session))
-        min_age = int(session['min_age_limit'])
-        if (min_age <= age):
-            available_capacity = session['available_capacity']
-            if (available_capacity > 0):
-                print("Available slot: "+str(session))
-                available_slots.append(session)
+    for centre in centres:
+        sessions = centre['sessions']
+        available_slots = []
+        for session in sessions:
+            print("checking slot: " + str(session))
+            min_age = int(session['min_age_limit'])
+            if (min_age <= age):
+                available_capacity = session['available_capacity']
+                if (available_capacity > 0):
+                    print("Available slot: "+str(session))
+                    available_slots.append(session)
     return available_slots
 
 
 available_slots = []
-for i in range(30):
-    date = (datetime.datetime.today() + datetime.timedelta(days=i)).strftime('%d-%m-%Y')
-    available_slots += get_available_slots(district_id, date, 18)
+date = datetime.datetime.today().strftime('%d-%m-%Y')
+available_slots += get_available_slots(district_id, date, age)
 
 now = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 if len(available_slots)>0:

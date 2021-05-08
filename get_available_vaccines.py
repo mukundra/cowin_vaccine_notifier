@@ -23,7 +23,7 @@ district_id = 571
 age = 18
 
 # change your whatsapp number
-whatsapp_nos = ['+919444250057']
+whatsapp_nos = ['+91']
 
 
 def send_whatsapp_message(msg):
